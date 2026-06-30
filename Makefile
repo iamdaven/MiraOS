@@ -8,11 +8,12 @@ LD       = $(ZIG) cc -target $(TARGET)
 
 CFLAGS   = -ffreestanding -fno-stack-check -fno-stack-protector -mno-red-zone \
            -mcmodel=kernel -Wall -Wextra -Werror \
-           -I. -Iarch/x86_64 -Idrivers -Ifs -Iui -Ikernel -O2
+           -I. -Iarch/x86_64 -Idrivers -Ifs -Iui -Ikernel -Iapps -Ilib -Inet -O2
 ASMFLAGS = -f elf64
 LDFLAGS  = -nostdlib -Wl,-T,linker.ld -Wl,-z,max-page-size=0x1000
 
 BOOT_ASM = boot/boot.asm
+STAGE1_ASM = boot/stage1.asm
 ASM_SRCS = arch/x86_64/isr.asm arch/x86_64/syscall_entry.asm
 
 C_SRCS   = kernel/main.c \
@@ -28,44 +29,45 @@ C_SRCS   = kernel/main.c \
            drivers/timer.c \
            drivers/keyboard.c \
            drivers/framebuffer.c \
+           drivers/mouse.c \
+           drivers/pic.c \
            fs/vfs.c \
            fs/ramfs.c \
+           apps/app.c \
+           lib/ds.c \
+           lib/cxxrt.c \
+           net/net.c \
            ui/ui.c \
            ui/shell.c \
            ui/widget.c \
+           ui/window.c \
            ui/gfx.c \
            ui/text.c \
            ui/input.c
 
 BOOT_OBJ = build/boot.o
+STAGE1_OBJ = build/stage1.bin
 ASM_OBJS = build/arch/x86_64/isr_asm.o build/arch/x86_64/syscall_entry.o
 C_OBJS   = $(C_SRCS:%.c=build/%.o)
 OBJS     = $(BOOT_OBJ) $(ASM_OBJS) $(C_OBJS)
 
 ISO      = miraos.iso
 KERNEL   = build/kernel.elf
-GRUB_DIR = tools/grub
 
-.PHONY: all iso clean dirs grub
+.PHONY: all iso clean dirs
 
 all: iso
 
 iso: $(ISO)
 
-grub:
-	@bash tools/fetch-grub.sh
-
-$(ISO): $(KERNEL) grub.cfg grub
+$(ISO): $(KERNEL) $(STAGE1_OBJ)
 	rm -rf iso
-	mkdir -p iso/boot/grub
+	mkdir -p iso/boot
 	cp $(KERNEL) iso/boot/kernel.elf
-	cp grub.cfg iso/boot/grub/grub.cfg
-	cp -r $(GRUB_DIR)/i386-pc iso/boot/grub/
+	cp $(STAGE1_OBJ) iso/boot/stage1.bin
 	$(XORRISO) -return_with SORRY 0 -as mkisofs -R -J -joliet-long \
-		-b boot/grub/i386-pc/cdboot.img \
-		-no-emul-boot -boot-load-size 8 -boot-info-table \
-		--grub2-boot-info \
-		--grub2-mbr $(GRUB_DIR)/i386-pc/boot_hybrid.img \
+		-b boot/stage1.bin \
+		-no-emul-boot -boot-load-size 4 -boot-info-table \
 		-o $(ISO) iso
 
 $(KERNEL): $(OBJS) linker.ld
@@ -73,6 +75,9 @@ $(KERNEL): $(OBJS) linker.ld
 
 build/boot.o: boot/boot.asm | dirs
 	$(ASM) $(ASMFLAGS) -o $@ $<
+
+build/stage1.bin: boot/stage1.asm | dirs
+	$(ASM) -f bin -o $@ $<
 
 build/arch/x86_64/isr_asm.o: arch/x86_64/isr.asm | dirs
 	@mkdir -p $(dir $@)
@@ -87,7 +92,7 @@ build/%.o: %.c | dirs
 	$(CC) $(CFLAGS) -c -o $@ $<
 
 dirs:
-	@mkdir -p build/arch/x86_64 build/boot build/kernel build/drivers build/fs build/ui
+	@mkdir -p build/arch/x86_64 build/boot build/kernel build/drivers build/fs build/ui build/apps build/lib build/net
 
 clean:
 	rm -rf build iso $(ISO)

@@ -8,6 +8,7 @@ miraos.iso
 *.ko
 *.obj
 *.elf
+*.mex
 
 # Linker output
 *.ilk
@@ -55,3 +56,14 @@ dkms.conf
 
 # debug information files
 *.dwo
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS specific
+.DS_Store
+Thumbs.db

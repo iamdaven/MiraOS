@@ -2,6 +2,7 @@
 #include "idt.h"
 #include "cpu.h"
 #include "drivers/driver.h"
+#include "drivers/pic.h"
 #include "kernel/panic.h"
 
 static isr_handler_t handlers[ISR_COUNT];
@@ -17,12 +18,6 @@ void pic_remap(void) {
     outb(0xA1, 0x01);
     outb(0x21, 0x0);
     outb(0xA1, 0x0);
-}
-
-void pic_send_eoi(uint8_t irq) {
-    if (irq >= 8)
-        outb(0xA0, 0x20);
-    outb(0x20, 0x20);
 }
 
 void isr_register_handler(uint8_t num, isr_handler_t handler) {
@@ -58,5 +53,5 @@ void isr_handler(struct registers *regs) {
         driver_dispatch_irq(regs->int_no - 32);
 
     if (regs->int_no >= 32 && regs->int_no < 48)
-        pic_send_eoi(regs->int_no - 32);
+        drivers_pic_send_eoi(regs->int_no - 32);
 }

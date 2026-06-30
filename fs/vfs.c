@@ -161,6 +161,34 @@ ssize_t vfs_write(int fd, const void *buf, size_t count) {
     return n;
 }
 
+int vfs_lseek(int fd, size_t offset, int whence) {
+    if (fd < 0 || fd >= VFS_MAX_OPEN || !open_table[fd].used)
+        return -1;
+    
+    vfs_node_t *node = open_table[fd].node;
+    size_t new_offset;
+    
+    switch (whence) {
+        case VFS_SEEK_SET:
+            new_offset = offset;
+            break;
+        case VFS_SEEK_CUR:
+            new_offset = open_table[fd].offset + offset;
+            break;
+        case VFS_SEEK_END:
+            new_offset = node->size + offset;
+            break;
+        default:
+            return -1;
+    }
+    
+    if (new_offset > node->size)
+        return -1;
+    
+    open_table[fd].offset = new_offset;
+    return 0;
+}
+
 static void vfs_set_name(vfs_node_t *node, const char *name) {
     int i = 0;
     while (name[i] && i < 63) {

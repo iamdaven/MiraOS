@@ -11,6 +11,10 @@ typedef long ssize_t;
 #define VFS_O_RDWR   2
 #define VFS_O_CREAT  4
 
+#define VFS_SEEK_SET 0
+#define VFS_SEEK_CUR 1
+#define VFS_SEEK_END 2
+
 typedef struct vfs_node vfs_node_t;
 
 typedef struct {
@@ -42,4 +46,5 @@ int vfs_open(const char *path, int flags);
 int vfs_close(int fd);
 ssize_t vfs_read(int fd, void *buf, size_t count);
 ssize_t vfs_write(int fd, const void *buf, size_t count);
+int vfs_lseek(int fd, size_t offset, int whence);
 vfs_node_t *vfs_create_file(const char *path, const void *data, size_t size);
