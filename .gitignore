@@ -1,5 +1,7 @@
-# Prerequisites
-*.d
+tools/grub/
+build/
+iso/
+miraos.iso
 
 # Object files
 *.o
