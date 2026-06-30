@@ -10,8 +10,8 @@ void pic_init(void) {
     outb(PIC2_DATA, 0x02);
     outb(PIC1_DATA, 0x01);
     outb(PIC2_DATA, 0x01);
-    outb(PIC1_DATA, 0x00);
-    outb(PIC2_DATA, 0x00);
+    outb(PIC1_DATA, 0xFF);
+    outb(PIC2_DATA, 0xFF);
 }
 
 void drivers_pic_send_eoi(uint8_t irq) {

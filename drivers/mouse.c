@@ -1,6 +1,5 @@
 #include "mouse.h"
-#include "drivers/driver.h"
-#include "drivers/pic.h"
+#include "driver.h"
 #include "arch/x86_64/cpu.h"
 #include <stddef.h>
 
@@ -92,17 +91,15 @@ static int mouse_init_driver(void) {
     return 0;
 }
 
-void mouse_init(void) {
-    static driver_t mouse_driver = {
-        .name = "PS/2 Mouse",
-        .id = 4,
-        .init = mouse_init_driver,
-        .irq = mouse_irq_handler,
-        .next = NULL
-    };
-    
-    driver_register(&mouse_driver);
-}
+static driver_t mouse_driver = {
+    .name = "PS/2 Mouse",
+    .id = 4,
+    .init = mouse_init_driver,
+    .irq = mouse_irq_handler,
+    .next = 0
+};
+
+DRIVER_REGISTER(mouse_driver);
 
 void mouse_poll(void) {
 }

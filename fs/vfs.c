@@ -1,5 +1,6 @@
 #include "vfs.h"
 #include "kernel/heap.h"
+#include "lib/mem.h"
 
 static vfs_node_t *root_node;
 
@@ -108,10 +109,14 @@ vfs_node_t *vfs_lookup(const char *path) {
 
 int vfs_open(const char *path, int flags) {
     vfs_node_t *node = vfs_lookup(path);
-    if (!node && !(flags & VFS_O_CREAT))
-        return -1;
-    if (!node)
-        return -1;
+    if (!node) {
+        if (flags & VFS_O_CREAT) {
+            vfs_create_file(path, "", 0);
+            node = vfs_lookup(path);
+        }
+        if (!node)
+            return -1;
+    }
     if (node->type == VFS_TYPE_DIR)
         return -1;
 

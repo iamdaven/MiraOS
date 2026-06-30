@@ -8,7 +8,7 @@ LD       = $(ZIG) cc -target $(TARGET)
 
 CFLAGS   = -ffreestanding -fno-stack-check -fno-stack-protector -mno-red-zone \
            -mcmodel=kernel -Wall -Wextra -Werror \
-           -I. -Iarch/x86_64 -Idrivers -Ifs -Iui -Ikernel -Iapps -Ilib -Inet -O2
+           -I. -Iarch/x86_64 -Idrivers -Ifs -Iui -Ikernel -Ilib -Inet -O2
 ASMFLAGS = -f elf64
 LDFLAGS  = -nostdlib -Wl,-T,linker.ld -Wl,-z,max-page-size=0x1000
 
@@ -21,6 +21,8 @@ C_SRCS   = kernel/main.c \
            kernel/mem.c \
            kernel/heap.c \
            kernel/syscall.c \
+           kernel/process.c \
+           kernel/elf.c \
            arch/x86_64/gdt.c \
            arch/x86_64/idt.c \
            arch/x86_64/isr.c \
@@ -31,10 +33,12 @@ C_SRCS   = kernel/main.c \
            drivers/framebuffer.c \
            drivers/mouse.c \
            drivers/pic.c \
+           drivers/ata.c \
            fs/vfs.c \
            fs/ramfs.c \
-           apps/app.c \
            lib/ds.c \
+           lib/mem.c \
+           lib/string.c \
            lib/cxxrt.c \
            net/net.c \
            ui/ui.c \
@@ -92,7 +96,7 @@ build/%.o: %.c | dirs
 	$(CC) $(CFLAGS) -c -o $@ $<
 
 dirs:
-	@mkdir -p build/arch/x86_64 build/boot build/kernel build/drivers build/fs build/ui build/apps build/lib build/net
+	@mkdir -p build/arch/x86_64 build/boot build/kernel build/drivers build/fs build/ui build/lib build/net
 
 clean:
 	rm -rf build iso $(ISO)
